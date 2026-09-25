@@ -3,3 +3,4 @@ langchain
 pydantic
 python-dotenv
 pytest
+langchain-openai
