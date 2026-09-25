@@ -9,13 +9,9 @@ def calculate_break_even(
     contribution_margin = selling_price - cost_per_sale
 
     if contribution_margin <= 0:
-        raise ValueError(
-            "Selling price must be greater than cost per sale."
-        )
+        raise ValueError("Selling price must be greater than cost per sale.")
 
-    return math.ceil(
-        fixed_costs / contribution_margin
-    )
+    return math.ceil(fixed_costs / contribution_margin)
 
 
 def calculate_profit(
@@ -24,9 +20,4 @@ def calculate_profit(
     fixed_costs: float,
     expected_sales: int
 ) -> float:
-    contribution_margin = selling_price - cost_per_sale
-
-    return (
-        contribution_margin * expected_sales
-        - fixed_costs
-    )
+    return (selling_price - cost_per_sale) * expected_sales - fixed_costs

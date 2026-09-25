@@ -10,6 +10,7 @@ class StartupState(BaseModel):
     monthly_fixed_costs: float
     expected_sales: int
     constraints: list[str] = Field(default_factory=list)
+    max_price: Optional[float] = None
 
     # Strategist outputs
     target_customer: Optional[str] = None
