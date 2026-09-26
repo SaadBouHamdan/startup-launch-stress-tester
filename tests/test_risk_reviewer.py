@@ -163,3 +163,23 @@ def test_risk_reviewer_reports_missing_financial_values():
         "approved": False,
     }
     assert state.model_dump() == original_state
+
+
+def test_unpriced_paid_action_blocks_approval():
+    state = StartupState(
+        startup_idea="Printed mugs",
+        selling_price=12,
+        cost_per_sale=5,
+        monthly_fixed_costs=300,
+        expected_sales=80,
+        proposed_price=12,
+        proposed_sales=80,
+        break_even_sales=43,
+        expected_profit=260,
+        unpriced_paid_actions=["Paid ads"],
+    )
+
+    assert risk_reviewer(state) == {
+        "risks": ["Paid action needs a cost estimate: Paid ads"],
+        "approved": False,
+    }

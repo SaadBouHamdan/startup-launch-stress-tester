@@ -1,5 +1,8 @@
 from typing import Optional
+
 from pydantic import BaseModel, Field
+
+from models.schemas import AddedCost
 
 
 class StartupState(BaseModel):
@@ -17,10 +20,14 @@ class StartupState(BaseModel):
     launch_strategy: Optional[str] = None
     proposed_price: Optional[float] = None
     proposed_sales: Optional[int] = None
+    added_costs: list[AddedCost] = Field(default_factory=list)
+    unpriced_paid_actions: list[str] = Field(default_factory=list)
 
     # Financial analyst outputs
     break_even_sales: Optional[float] = None
     expected_profit: Optional[float] = None
+    total_monthly_fixed_costs: Optional[float] = None
+    total_cost_per_sale: Optional[float] = None
 
     # Risk reviewer outputs
     risks: list[str] = Field(default_factory=list)
