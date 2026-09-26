@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LaunchLab — Stress test your startup</title>
+  <style>
+    :root { font-family: Inter, "Segoe UI", Arial, sans-serif; color: #eaf2fc; background: #0b1220; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .app { min-height: 100vh; display: grid; grid-template-columns: 232px minmax(480px, 1fr) 360px; }
+    .sidebar, .insights { background: #111c2d; }
+    .sidebar { border-right: 1px solid #223247; padding: 32px 20px 22px; display: flex; flex-direction: column; }
+    .brand { font-size: 20px; font-weight: 850; letter-spacing: .03em; }
+    .brand span { color: #54d8b8; }
+    .new { margin: 34px 0 25px; width: 100%; text-align: left; color: #d8e8f7; background: #1c3049; border: 1px solid #365474; border-radius: 10px; padding: 13px; font-weight: 700; }
+    .new:hover, .suggestions button:hover { border-color: #54d8b8; }
+    .nav-title, .eyebrow { color: #88a9bd; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+    .nav-title { margin: 12px 12px 10px; }
+    .nav-item { background: #203a51; color: #eaf8ff; border-radius: 10px; padding: 13px; font-size: 13px; font-weight: 650; overflow-wrap: anywhere; }
+    .side-note { margin-top: auto; padding: 15px; background: #192b40; color: #a9bfd0; border-radius: 13px; font-size: 12px; line-height: 1.55; }
+    .side-note strong { display: block; color: #e7f6ff; margin-bottom: 4px; }
+    .conversation { min-width: 0; height: 100vh; padding: 30px 34px 23px; display: flex; flex-direction: column; }
+    .accent { color: #63e0c1; }
+    h1 { font-size: 25px; margin: 7px 0 4px; letter-spacing: -.035em; overflow-wrap: anywhere; }
+    .subtitle { color: #829bb2; font-size: 12px; margin: 0 0 14px; }
+    .status { color: #79ccba; font-size: 11px; padding-bottom: 18px; }
+    .status strong { color: #cdf6ed; }
+    .chat-log { flex: 1; overflow-y: auto; min-height: 0; padding: 4px 8px 18px 0; }
+    .message { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+    .avatar { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: 9px; font-size: 11px; font-weight: 800; }
+    .user .avatar { background: #314968; }
+    .assistant .avatar { background: #1e6b62; }
+    .bubble { max-width: 670px; padding: 15px 18px; background: #162438; border: 1px solid #263b54; border-radius: 16px; font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .assistant .bubble { background: #112334; border-color: #27556a; }
+    .bubble strong { color: white; }
+    .bubble p { margin: 8px 0 0; }
+    .typing .bubble { display: flex; align-items: center; gap: 5px; min-width: 90px; min-height: 49px; }
+    .typing .bubble span { width: 6px; height: 6px; border-radius: 50%; background: #76d9c5; animation: pulse 1s ease-in-out infinite; }
+    .typing .bubble span:nth-child(2) { animation-delay: .16s; }
+    .typing .bubble span:nth-child(3) { animation-delay: .32s; }
+    @keyframes pulse { 0%, 60%, 100% { opacity: .35; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-4px); } }
+    @media (prefers-reduced-motion: reduce) { .typing .bubble span { animation: none; opacity: 1; } }
+    .pipeline { display: flex; flex-wrap: wrap; gap: 7px; margin: 15px 0 0; }
+    .pipeline span { color: #afe6d9; border: 1px solid #386478; padding: 5px 9px; border-radius: 99px; font-size: 10px; font-weight: 700; }
+    .strategy-details { margin-top: 15px; border: 1px solid #386478; border-radius: 10px; padding: 10px 12px; }
+    .strategy-details summary { color: #aee7dc; cursor: pointer; font-weight: 700; }
+    .strategy-text { max-height: 330px; overflow-y: auto; margin-top: 12px; padding-right: 5px; white-space: pre-wrap; color: #dbe8f5; }
+    .suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 13px 42px; }
+    .suggestions button { border: 1px solid #375571; background: #193047; color: #b9daeb; border-radius: 40px; padding: 8px 12px; font-size: 11px; }
+    .composer { border: 1px solid #35506b; border-radius: 15px; background: #15253a; padding: 13px 14px; display: flex; gap: 10px; align-items: center; min-height: 64px; }
+    .composer:focus-within { border-color: #54d8b8; }
+    .composer input { color: #eaf2fc; background: transparent; border: 0; outline: 0; min-width: 0; flex: 1; font-size: 13px; }
+    .composer input::placeholder { color: #91aac0; opacity: 1; }
+    .skip { color: #9bd6cf; background: transparent; border: 0; font-size: 12px; }
+    .send { width: 34px; height: 34px; border: 0; border-radius: 9px; background: #54d8b8; color: #0d2831; font-size: 20px; line-height: 1; }
+    .send:disabled { opacity: .5; cursor: default; }
+    .insights { border-left: 1px solid #223247; padding: 30px 22px; overflow-y: auto; }
+    .insights h2 { margin: 6px 0 2px; font-size: 18px; }
+    .insights .sub { color: #8ca6bb; font-size: 11px; margin: 0 0 19px; }
+    .cards { display: flex; flex-direction: column; gap: 13px; }
+    .card { background: #192a3e; border: 1px solid #2b4359; border-radius: 14px; padding: 17px; }
+    .card .eyebrow { color: #91aabd; }
+    .card b { display: block; font-size: 25px; letter-spacing: -.035em; margin: 7px 0 3px; }
+    .card small, .card p { color: #a9bfd0; font-size: 11px; line-height: 1.55; }
+    .card p { margin: 9px 0 0; white-space: pre-wrap; }
+    .card p.strategy-preview { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }
+    .card .negative { color: #ff9a86; }
+    .card.risk { background: #2b2530; border-color: #704b49; }
+    .card.risk p { color: #f3beb1; }
+    .empty { border-style: dashed; color: #a9bfd0; font-size: 12px; line-height: 1.6; }
+    .empty strong { display: block; color: #e7f6ff; }
+    .fine { color: #8ca6bb; font-size: 11px; line-height: 1.5; margin-top: 13px; }
+    @media (max-width: 1100px) { .app { grid-template-columns: 190px minmax(0, 1fr); } .insights { grid-column: 2; border-left: 0; border-top: 1px solid #223247; } .conversation { height: min(780px, 85vh); } }
+    @media (max-width: 700px) { .app { display: block; } .sidebar { padding: 15px 20px; } .sidebar .new { margin: 12px 0 0; } .sidebar .nav-title, .sidebar .nav-item, .side-note { display: none; } .conversation { height: 72vh; min-height: 500px; padding: 24px 18px 16px; } .insights { padding: 24px 18px; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">LAUNCH<span>/</span>LAB</div>
+      <button class="new" type="button" id="new-test">＋ New stress test</button>
+      <div class="nav-title">CURRENT IDEA</div>
+      <div class="nav-item" id="current-idea">New idea</div>
+      <div class="side-note"><strong>Decision support</strong>Answer the questions. The launch strategist, financial analyst, and risk reviewer handle the rest.</div>
+    </aside>
+    <main class="conversation">
+      <div class="eyebrow accent">GUIDED LAUNCH ASSESSMENT</div>
+      <h1 id="title">New stress test</h1>
+      <p class="subtitle">One question at a time. No long form to fill out.</p>
+      <div class="status" id="status" aria-live="polite"></div>
+      <div class="chat-log" id="chat-log" aria-live="polite"></div>
+      <div class="suggestions" id="suggestions"></div>
+      <form class="composer" id="composer">
+        <input id="answer" aria-label="Your answer" autocomplete="off" placeholder="Type your answer…">
+        <button class="skip" type="button" id="skip" hidden>Skip</button>
+        <button class="send" id="send" type="submit" aria-label="Send answer">↑</button>
+      </form>
+    </main>
+    <aside class="insights">
+      <div class="eyebrow accent">LIVE INSIGHTS</div>
+      <h2 id="insights-title">Waiting for your answers</h2>
+      <p class="sub" id="insights-sub">Results appear after the AI finishes the assessment.</p>
+      <div class="cards" id="cards"><div class="card empty"><strong>Start with your idea.</strong>We’ll ask for the numbers we need, then run the full stress test.</div></div>
+      <p class="fine">Approval means the plan passed the implemented checks; it is not a guarantee of business success.</p>
+    </aside>
+  </div>
+  <script>
+    const questions = [
+      { key: 'startup_idea', text: 'What startup idea do you want to test?', help: 'Describe what you plan to sell or offer.' },
+      { key: 'selling_price', text: 'What price will you charge for one sale?', help: 'For example, $6 per shirt.', type: 'money' },
+      { key: 'cost_per_sale', text: 'How much does each sale cost you?', help: 'Include production, materials, or delivery costs per sale.', type: 'money' },
+      { key: 'monthly_fixed_costs', text: 'What are your fixed costs each month?', help: 'Include rent, subscriptions, and other monthly costs.', type: 'money' },
+      { key: 'expected_sales', text: 'How many sales do you expect in the first month?', help: 'Give your best estimate as a whole number.', type: 'count' },
+      { key: 'max_price', text: 'Is there a maximum price I must stay under?', help: 'Enter a price, or skip if there is no cap.', type: 'money', optional: true },
+      { key: 'constraints', text: 'Any other rules or constraints for the launch plan?', help: 'Separate multiple rules with semicolons, or skip if none.', optional: true }
+    ];
+    let step = 0;
+    let answers = {};
+    let busy = false;
+    let generation = 0;
+    let questionTimer;
+    const $ = id => document.getElementById(id);
+    const money = value => (value < 0 ? '−' : '') + '$' + Math.abs(value).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    function message(role, heading, detail = '') {
+      const row = document.createElement('div'); row.className = 'message ' + role;
+      const avatar = document.createElement('div'); avatar.className = 'avatar'; avatar.textContent = role === 'assistant' ? 'LL' : 'YOU';
+      const bubble = document.createElement('div'); bubble.className = 'bubble';
+      const strong = document.createElement('strong'); strong.textContent = heading; bubble.appendChild(strong);
+      if (detail) { const p = document.createElement('p'); p.textContent = detail; bubble.appendChild(p); }
+      row.append(avatar, bubble); $('chat-log').appendChild(row); $('chat-log').scrollTop = $('chat-log').scrollHeight;
+      return bubble;
+    }
+    function card(label, value, note = '', extraClass = '') {
+      const box = document.createElement('div'); box.className = 'card ' + extraClass;
+      const eyebrow = document.createElement('div'); eyebrow.className = 'eyebrow'; eyebrow.textContent = label;
+      const big = document.createElement('b'); big.textContent = value; if (extraClass === 'negative') big.className = 'negative';
+      box.append(eyebrow, big);
+      if (note) { const small = document.createElement('small'); small.textContent = note; box.appendChild(small); }
+      $('cards').appendChild(box);
+    }
+    function ask() {
+      if (step === questions.length) return runAssessment();
+      const q = questions[step];
+      $('status').innerHTML = '<strong>Question ' + (step + 1) + ' of ' + questions.length + '</strong> · Answer in your own words';
+      message('assistant', q.text, q.help);
+      $('answer').value = '';
+      $('answer').placeholder = q.type === 'money' ? 'Enter an amount…' : q.type === 'count' ? 'Enter a whole number…' : 'Type your answer…';
+      $('skip').hidden = !q.optional;
+      $('answer').focus();
+    }
+    function pauseBeforeQuestion(clarification = null) {
+      busy = true;
+      $('answer').disabled = true;
+      $('send').disabled = true;
+      $('skip').hidden = true;
+      $('status').innerHTML = clarification ? '<strong>Checking your answer…</strong> · Let’s get this right' : '<strong>Thinking…</strong> · Next question is coming';
+      const row = document.createElement('div'); row.className = 'message assistant typing';
+      row.setAttribute('aria-label', 'LaunchLab is preparing the next question');
+      const avatar = document.createElement('div'); avatar.className = 'avatar'; avatar.textContent = 'LL';
+      const bubble = document.createElement('div'); bubble.className = 'bubble';
+      for (let i = 0; i < 3; i++) bubble.appendChild(document.createElement('span'));
+      row.append(avatar, bubble); $('chat-log').appendChild(row);
+      $('chat-log').scrollTop = $('chat-log').scrollHeight;
+      const current = ++generation;
+      questionTimer = setTimeout(() => {
+        if (current !== generation) return;
+        row.remove(); busy = false;
+        $('answer').disabled = false; $('send').disabled = false;
+        if (clarification) {
+          $('status').innerHTML = '<strong>Question ' + (step + 1) + ' of ' + questions.length + '</strong> · Try this one again';
+          message('assistant', clarification.heading, clarification.detail);
+          $('skip').hidden = !questions[step].optional;
+          $('answer').focus(); $('answer').select();
+        } else {
+          ask();
+        }
+      }, 1100);
+    }
+    function validateAnswer(q, raw) {
+      const examples = {
+        startup_idea: ['Sorry, I need a short sentence about your business idea.', 'Describe what you will sell or offer and who it is for. For example: “I will sell custom university T-shirts to students.”'],
+        selling_price: ['Sorry, I meant the price a customer pays for one sale.', 'Enter an amount like 6 or $6.50. It must be greater than zero.'],
+        cost_per_sale: ['Sorry, I meant what one sale costs you to fulfill.', 'Enter an amount like 4 or $4. Use 0 if there is no per-sale cost.'],
+        monthly_fixed_costs: ['Sorry, I meant costs you pay each month regardless of sales.', 'Enter an amount like 300 or $300. Use 0 if you have none.'],
+        expected_sales: ['Sorry, I meant the number of sales you expect in month one.', 'Enter a whole number like 80. Use 0 if you expect no sales yet.'],
+        max_price: ['Sorry, I meant the highest price you are willing to charge.', 'Enter an amount like 7 or $7, or click Skip if there is no cap.'],
+        constraints: ['Sorry, I need a short list of rules for the plan.', 'Separate up to 10 rules with semicolons, or click Skip if there are none.']
+      };
+      const [heading, detail] = examples[q.key];
+      if (q.optional && /^(none|no|nothing|n\/a)$/i.test(raw)) return { value: q.key === 'constraints' ? [] : null };
+      if (!raw) return { error: { heading, detail } };
+      if (q.key === 'startup_idea') {
+        const words = raw.split(/\s+/).filter(word => /\p{L}/u.test(word));
+        if (raw.length < 12 || raw.length > 1000 || words.length < 3) return { error: { heading, detail } };
+        return { value: raw };
+      }
+      if (q.type === 'money') {
+        if (!/^\$?\s*(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{1,2})?\s*$/.test(raw)) return { error: { heading, detail } };
+        const value = Number(raw.replace(/[$,\s]/g, ''));
+        if (!Number.isFinite(value) || value < 0 || ((q.key === 'selling_price' || q.key === 'max_price') && value === 0)) return { error: { heading, detail } };
+        return { value };
+      }
+      if (q.type === 'count') {
+        if (!/^\d+$/.test(raw)) return { error: { heading, detail } };
+        const value = Number(raw);
+        if (!Number.isSafeInteger(value)) return { error: { heading, detail } };
+        return { value };
+      }
+      const value = raw.split(';').map(s => s.trim()).filter(Boolean);
+      if (value.length > 10 || value.some(item => item.length < 6 || item.length > 500 || !/\p{L}/u.test(item))) return { error: { heading, detail } };
+      return { value };
+    }
+    function start() {
+      clearTimeout(questionTimer); generation += 1;
+      step = 0; answers = {}; busy = false;
+      $('title').textContent = 'New stress test'; $('current-idea').textContent = 'New idea';
+      $('chat-log').replaceChildren(); $('suggestions').replaceChildren();
+      $('insights-title').textContent = 'Waiting for your answers';
+      $('insights-sub').textContent = 'Results appear after the AI finishes the assessment.';
+      $('cards').innerHTML = '<div class="card empty"><strong>Start with your idea.</strong>We’ll ask for the numbers we need, then run the full stress test.</div>';
+      $('answer').disabled = false; $('send').disabled = false;
+      pauseBeforeQuestion();
+    }
+    function submitAnswer(event) {
+      event.preventDefault();
+      if (busy) return;
+      const q = questions[step]; if (!q) return;
+      const raw = $('answer').value.trim();
+      const checked = validateAnswer(q, raw);
+      if (checked.error) {
+        if (raw) message('user', raw);
+        pauseBeforeQuestion(checked.error);
+        return;
+      }
+      answers[q.key] = checked.value;
+      message('user', raw);
+      if (q.key === 'startup_idea') {
+        $('title').textContent = raw.length > 60 ? raw.slice(0, 57) + '…' : raw;
+        $('current-idea').textContent = raw.length > 28 ? raw.slice(0, 25) + '…' : raw;
+      }
+      step += 1; pauseBeforeQuestion();
+    }
+    function skip() {
+      const q = questions[step]; if (!q || !q.optional || busy) return;
+      answers[q.key] = q.key === 'constraints' ? [] : null;
+      message('user', 'Skip for now'); step += 1; pauseBeforeQuestion();
+    }
+    async function runAssessment() {
+      const current = generation;
+      busy = true; $('answer').disabled = true; $('send').disabled = true; $('skip').hidden = true;
+      $('suggestions').replaceChildren();
+      $('status').innerHTML = '<strong>Running the stress test…</strong> · This may take a minute';
+      $('insights-title').textContent = 'Analysis in progress';
+      $('insights-sub').textContent = 'The strategist may revise the plan after review.';
+      $('cards').innerHTML = '<div class="card empty"><strong>Working through your plan</strong>Strategy → Finance → Risk review → Revisions if needed</div>';
+      message('assistant', 'I have your answers. I’m testing the launch plan now.', 'I’ll propose a strategy, calculate its financial results, and check the risks.');
+      try {
+        const response = await fetch('/api/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(answers) });
+        const result = await response.json();
+        if (current !== generation) return;
+        if (!response.ok) throw new Error(result.error || 'The assessment failed.');
+        showResult(result);
+      } catch (error) {
+        if (current !== generation) return;
+        $('status').innerHTML = '<strong>Could not finish</strong> · Your answers are still here';
+        $('insights-title').textContent = 'Try again';
+        $('insights-sub').textContent = 'The analysis did not complete.';
+        $('cards').innerHTML = '';
+        card('ERROR', error.message);
+        message('assistant', 'The assessment did not finish.', error.message);
+        const retry = document.createElement('button'); retry.textContent = 'Retry assessment'; retry.addEventListener('click', () => { retry.remove(); runAssessment(); });
+        $('suggestions').appendChild(retry);
+      }
+    }
+    function showResult(result) {
+      $('status').innerHTML = '<strong>Review complete</strong> · ' + result.revision_count + ' revision' + (result.revision_count === 1 ? '' : 's');
+      $('insights-title').textContent = result.approved ? 'Ready to test the launch' : 'Needs another look';
+      $('insights-sub').textContent = 'Based on the final proposed strategy';
+      $('cards').replaceChildren();
+      card('EXPECTED MONTHLY PROFIT', money(result.expected_profit), 'At ' + result.proposed_sales + ' proposed sales', result.expected_profit < 0 ? 'negative' : '');
+      card('BREAK-EVEN SALES', result.break_even_sales == null ? 'Not reachable' : String(result.break_even_sales), 'Sales needed to cover costs');
+      card('PRICE & COST', money(result.proposed_price) + ' / ' + money(result.total_cost_per_sale), 'Proposed price / total cost per sale');
+      if (result.risks && result.risks.length) {
+        const risk = document.createElement('div'); risk.className = 'card risk';
+        const label = document.createElement('div'); label.className = 'eyebrow'; label.textContent = result.risks.length + ' OPEN RISK' + (result.risks.length === 1 ? '' : 'S');
+        const p = document.createElement('p'); p.textContent = result.risks.join('\n'); risk.append(label, p); $('cards').appendChild(risk);
+      }
+      const strategy = document.createElement('div'); strategy.className = 'card';
+      const label = document.createElement('div'); label.className = 'eyebrow'; label.textContent = 'LATEST STRATEGY';
+      const p = document.createElement('p'); p.className = 'strategy-preview'; p.textContent = result.launch_strategy || 'No strategy returned.';
+      const hint = document.createElement('small'); hint.textContent = 'Open the full strategy in the chat.';
+      strategy.append(label, p, hint); $('cards').appendChild(strategy);
+      const opening = result.approved ? 'The plan passed the current checks.' : 'The plan still has risks after review.';
+      const gap = result.break_even_sales == null ? null : Math.max(0, Math.ceil(result.break_even_sales - result.proposed_sales));
+      const recap = 'At ' + money(result.proposed_price) + ' and ' + result.proposed_sales + ' projected sales, expected profit is ' + money(result.expected_profit) + '.' + (gap > 0 ? ' You need about ' + gap + ' more sales to break even.' : ' The figures pass the break-even volume check.');
+      const bubble = message('assistant', opening, recap);
+      const details = document.createElement('details'); details.className = 'strategy-details';
+      const summary = document.createElement('summary'); summary.textContent = 'Read full launch strategy';
+      const full = document.createElement('div'); full.className = 'strategy-text';
+      full.textContent = 'Target customer: ' + (result.target_customer || 'Not specified') + '\n\n' + (result.launch_strategy || 'No strategy returned.');
+      details.append(summary, full); bubble.appendChild(details);
+      const pipeline = document.createElement('div'); pipeline.className = 'pipeline';
+      for (const stage of ['✓ Strategy', '✓ Finance', '✓ Risk review', result.revision_count + ' revisions']) {
+        const chip = document.createElement('span'); chip.textContent = stage; pipeline.appendChild(chip);
+      }
+      bubble.appendChild(pipeline);
+      $('answer').placeholder = 'Start a new stress test to try another scenario';
+      $('suggestions').replaceChildren();
+    }
+    $('composer').addEventListener('submit', submitAnswer);
+    $('skip').addEventListener('click', skip);
+    $('new-test').addEventListener('click', start);
+    start();
+  </script>
+</body>
+</html>

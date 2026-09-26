@@ -121,6 +121,16 @@ If the Windows console cannot print Unicode characters in the generated strategy
 python -X utf8 main.py
 ```
 
+## Browser UI
+
+From the repository folder, run the local web server with your virtual environment:
+
+```powershell
+.\.venv\Scripts\python.exe web_server.py
+```
+
+Open `http://127.0.0.1:8000` in a browser. The conversation asks for the idea, price, cost per sale, monthly fixed costs, expected sales, an optional maximum price, and optional constraints one at a time. After the final answer, the existing LangGraph workflow runs and the page shows its strategy, financial results, risks, and approval status. Use **New stress test** to try another idea. The server binds to localhost and loads `OPENAI_API_KEY` from `.env` on the server; the browser never receives the key. Live runs require network access and may incur API charges.
+
 ## How to Run Tests
 
 With the virtual environment active, run:
@@ -129,13 +139,15 @@ With the virtual environment active, run:
 python -m pytest
 ```
 
-The suite has **52 passing tests**. Tests mock OpenAI model calls, require no real API key, and make no live OpenAI requests. Coverage includes financial calculations, added expenses, unpriced paid actions, distinct toolsets, reviewer checks, structured-output handling, price caps, routing, and revision limits.
+The suite has **60 passing tests**. Tests mock OpenAI model calls, require no real API key, and make no live OpenAI requests. Coverage includes financial calculations, added expenses, unpriced paid actions, distinct toolsets, reviewer checks, structured-output handling, price caps, routing, and revision limits.
 
 ## Project Structure
 
 ```text
 startup-launch-stress-tester/
 ├── main.py                   # Demo entry point
+├── web_server.py             # Local HTTP API and frontend server
+├── web/index.html            # Guided browser interface
 ├── graph.py                  # LangGraph nodes, routing, and checkpointing
 ├── state.py                  # Shared Pydantic StartupState
 ├── agents/
@@ -162,4 +174,4 @@ startup-launch-stress-tester/
 - Declared paid actions without cost estimates block approval.
 - Conditional revision routing and in-memory checkpointing are implemented.
 - Mocked graph tests verify approval after revision and stopping at the revision limit.
-- All 52 tests pass.
+- All 60 tests pass.
