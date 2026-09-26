@@ -77,6 +77,60 @@ def test_graph_revises_price_above_cap_and_approves():
     assert state.model_dump() == original_state
 
 
+def test_graph_stops_after_all_revisions_are_rejected():
+    state = StartupState(
+        startup_idea="Custom university T-shirt business",
+        selling_price=6,
+        cost_per_sale=4,
+        monthly_fixed_costs=300,
+        expected_sales=80,
+        max_price=7,
+        max_revisions=3,
+    )
+    rejected_proposal = LaunchStrategyOutput(
+        target_customer="University students",
+        launch_strategy="Promote through campus clubs.",
+        proposed_price=8,
+        proposed_sales=100,
+    )
+    config = {
+        "configurable": {"thread_id": str(uuid4())},
+        # Fail promptly if a routing regression causes an endless loop.
+        "recursion_limit": 25,
+    }
+
+    with patch("agents.strategist.ChatOpenAI") as mock_model:
+        structured_model = mock_model.return_value.with_structured_output.return_value
+        structured_model.invoke.return_value = rejected_proposal
+
+        updates = list(graph.stream(state.model_dump(), config, stream_mode="updates"))
+
+        assert structured_model.invoke.call_count == 4
+        for revision, call in enumerate(structured_model.invoke.call_args_list):
+            assert f"Revision count: {revision}" in call.args[0]
+
+    assert [next(iter(update)) for update in updates] == [
+        "strategist", "financial_analyst", "risk_reviewer", "revise",
+        "strategist", "financial_analyst", "risk_reviewer", "revise",
+        "strategist", "financial_analyst", "risk_reviewer", "revise",
+        "strategist", "financial_analyst", "risk_reviewer",
+    ]
+    assert [update["revise"]["revision_count"] for update in updates if "revise" in update] == [1, 2, 3]
+    reviews = [update["risk_reviewer"] for update in updates if "risk_reviewer" in update]
+    assert len(reviews) == 4
+    for review in reviews:
+        assert review["approved"] is False
+        assert review["risks"] == [
+            "Proposed price 8.0 exceeds max_price 7.0. Lower the proposed price to 7.0 or less."
+        ]
+
+    final_snapshot = graph.get_state(config)
+    assert final_snapshot.values["approved"] is False
+    assert final_snapshot.values["revision_count"] == 3
+    assert final_snapshot.values["risks"]
+    assert final_snapshot.next == ()
+
+
 @pytest.mark.parametrize(
     "approved, revision_count, max_revisions, expected_route",
     [
