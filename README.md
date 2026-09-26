@@ -1,3 +1,150 @@
 # Startup Launch Stress Tester
 
-LangGraph multi-agent project for COE749.
+## Project Overview
+
+Startup Launch Stress Tester is a COE749 group project that evaluates a startup launch plan using an LLM and deterministic financial checks. It proposes a strategy, calculates financial results, identifies risks, and revises rejected plans within a configured limit.
+
+Approval means the plan passes the implemented checks; it is not a guarantee of business success.
+
+## How the System Works
+
+1. Provide a startup idea, selling price, cost per sale, monthly fixed costs, expected monthly sales, and constraints.
+2. The Launch Strategist proposes a target customer, launch strategy, price, and sales estimate.
+3. The Financial Analyst calculates break-even sales and expected profit.
+4. The Risk Reviewer checks the financial results and constraints.
+5. The graph ends on approval or revises the proposal until the revision limit is reached.
+
+The optional `max_price` input sets a price cap. A proposal above it is rejected; equality is allowed. When the cap is `None`, no cap check applies. Nonblank free-text constraints require manual verification and prevent automatic approval.
+
+## Agent Roles
+
+| Agent | Responsibility | Model or toolset |
+| --- | --- | --- |
+| Launch Strategist | Create and revise a realistic launch proposal using previous reviewer feedback. | OpenAI through `ChatOpenAI`, with the Pydantic `LaunchStrategyOutput` schema. |
+| Financial Analyst | Calculate break-even sales and expected profit using proposed values, falling back to original inputs. | `calculate_break_even_tool`, `calculate_profit_tool`. |
+| Risk Reviewer | Validate financial values, profit, break-even coverage, price limits, and constraints. | `check_financial_risks`, `check_manual_constraints`. |
+
+The Financial Analyst and Risk Reviewer have different, non-overlapping LangChain toolsets. Both invoke their tools explicitly and deterministically; neither uses an LLM.
+
+## Architecture / Workflow
+
+`graph.py` builds a LangGraph `StateGraph(StartupState)`. Each node returns a partial state update. `MemorySaver` checkpoints execution using a `thread_id`; checkpoints remain in memory only and do not survive a process restart.
+
+```text
+START
+  ↓
+Launch Strategist
+  ↓
+Financial Analyst
+  ↓
+Risk Reviewer
+  ↓
+Approved?
+  ├── Yes → END
+  └── No
+       ├── Revisions available → Revise → Launch Strategist
+       └── Revision limit reached → END (not approved)
+```
+
+The `revise` node increments `revision_count` before returning to the Strategist. With `max_revisions=3`, execution permits one initial attempt and up to three revisions. Exceptions raised by nodes propagate rather than triggering this review loop.
+
+## Project Requirements / Dependencies
+
+- Python (the project has been tested with Python 3.13).
+- Git for cloning and version control.
+- An OpenAI API key with access to the configured `gpt-5-mini` model for live runs.
+- Packages in `requirements.txt`: `langgraph`, `langchain`, `langchain-openai`, `pydantic`, `python-dotenv`, and `pytest`.
+
+## Setup Instructions
+
+Replace `<repository-url>` with your group's repository URL:
+
+```shell
+git clone https://github.com/SaadBouHamdan/startup-launch-stress-tester.git
+cd startup-launch-stress-tester
+python -m venv .venv
+```
+
+Activate the virtual environment on Windows (Command Prompt):
+
+```bat
+.venv\Scripts\activate
+```
+
+For Windows PowerShell, use `.\.venv\Scripts\Activate.ps1`.
+
+Install the dependencies:
+
+```shell
+pip install -r requirements.txt
+```
+
+## Environment Variables
+
+Each user must create a local `.env` file in the project root:
+
+```dotenv
+OPENAI_API_KEY=your_key_here
+```
+
+Replace the placeholder with your own API key. `main.py` loads the file using `load_dotenv()`.
+
+**Do not commit `.env` or share API keys.** The project's `.gitignore` already excludes `.env`. Live runs require internet access and may incur OpenAI API charges.
+
+## How to Run
+
+With the virtual environment active, run:
+
+```shell
+python main.py
+```
+
+The current demo evaluates a custom university T-shirt business with a selling price of 6, cost per sale of 4, monthly fixed costs of 300, expected sales of 80, and `max_price=7`. It prints the initial state, final proposal, financial results, risks, approval status, and revision count.
+
+A live proposal may pass on the first attempt, so a revision is not guaranteed. Mocked graph tests demonstrate both successful revision and termination after repeated rejection.
+
+If the Windows console cannot print Unicode characters in the generated strategy, use `python -X utf8 main.py`.
+
+## How to Run Tests
+
+With the virtual environment active, run:
+
+```shell
+pytest
+```
+
+If local imports are not resolved by that command, use `python -m pytest`.
+
+The current suite has **48 passing tests**. Tests mock OpenAI model calls, require no real API key, and make no live OpenAI requests. Coverage includes financial calculations, distinct toolsets, reviewer checks, structured-output handling, price caps, routing, and revision limits.
+
+## Project Structure
+
+```text
+startup-launch-stress-tester/
+├── main.py                   # Demo entry point
+├── graph.py                  # LangGraph nodes, routing, and checkpointing
+├── state.py                  # Shared Pydantic StartupState
+├── agents/
+│   ├── strategist.py         # LLM launch planning
+│   ├── financial_analyst.py  # Financial tool invocation
+│   └── risk_reviewer.py      # Risk tool invocation and approval
+├── tools/
+│   ├── financial_tools.py   # Calculation helpers and LangChain wrappers
+│   └── risk_tools.py        # Deterministic validation tools
+├── models/
+│   └── schemas.py           # LaunchStrategyOutput
+├── tests/                   # Unit and mocked graph tests
+├── requirements.txt
+├── .gitignore
+├── .env.example             # Example environment-variable template
+└── README.md
+```
+
+## Current Status
+
+- Three agent nodes and two distinct explicit toolsets are implemented.
+- Structured LLM output, deterministic calculations, and price-cap validation are implemented.
+- Conditional revision routing and in-memory checkpointing are implemented.
+- Mocked graph tests verify approval after revision and stopping at the revision limit.
+- Tests cover immediate approval, successful revision after rejection, and termination after repeated rejection.
+- All 48 tests pass.
