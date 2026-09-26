@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Startup Launch Stress Tester is a COE749 group project that evaluates a startup launch plan using an LLM and deterministic financial checks. It proposes a strategy, calculates financial results, identifies risks, and revises rejected plans within a configured limit.
+Startup Launch Stress Tester is a COE 549 group project that evaluates a startup launch plan using an LLM and deterministic financial checks. It proposes a strategy, calculates financial results, identifies risks, and revises rejected plans within a configured limit.
 
 Approval means the plan passes the implemented checks; it is not a guarantee of business success. Extra costs are estimates supplied by the Strategist, not verified market prices. A person should check whether the written strategy omits a paid action; the deterministic Reviewer can only reject paid actions that are declared without a cost estimate.
 
