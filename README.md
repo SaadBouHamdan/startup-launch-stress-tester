@@ -129,7 +129,7 @@ From the repository folder, run the local web server with your virtual environme
 .\.venv\Scripts\python.exe web_server.py
 ```
 
-Open `http://127.0.0.1:8000` in a browser. The conversation asks for the idea, price, cost per sale, monthly fixed costs, expected sales, an optional maximum price, and optional constraints one at a time. After the final answer, the existing LangGraph workflow runs and the page shows its strategy, financial results, risks, and approval status. Use **New stress test** to try another idea. The server binds to localhost and loads `OPENAI_API_KEY` from `.env` on the server; the browser never receives the key. Live runs require network access and may incur API charges.
+Open `http://127.0.0.1:8000` in a browser. The Analyst Workspace form collects the idea, price, cost per sale, monthly fixed costs, expected sales, an optional maximum price, and optional constraints. Invalid answers receive guidance beside their fields. Select **Run stress test** to run the existing LangGraph workflow and review its strategy, financial results, risks, and approval status. Select **New assessment** to start another idea. The server binds to localhost and loads `OPENAI_API_KEY` from `.env` on the server; the browser never receives the key. Live runs require network access and may incur API charges.
 
 ## How to Run Tests
 
