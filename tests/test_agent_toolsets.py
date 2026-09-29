@@ -181,7 +181,9 @@ def test_agents_invoke_distinct_assigned_toolsets(proposed_price, proposed_sales
     risk_toolset = {name for name, inputs in risk_calls}
     assert financial_toolset != risk_toolset
     assert financial_toolset.isdisjoint(risk_toolset)
-    assert result["approved"] is False
-    assert result["risks"][-1] == "Constraint requires manual verification: Do not sell on campus"
+    assert result["warnings"] == [
+        "Constraint requires manual verification: Do not sell on campus"
+    ]
+    assert not any("Constraint" in risk for risk in result["risks"])
     assert state.model_dump() == original_state
     assert reviewed_state.model_dump() == {**original_state, **financial_result}

@@ -11,10 +11,10 @@ Approval means the plan passes the implemented checks; it is not a guarantee of 
 1. Provide a startup idea, selling price, cost per sale, monthly fixed costs, expected monthly sales, and constraints.
 2. The Launch Strategist proposes a target customer, launch strategy, price, and sales estimate.
 3. The Financial Analyst calculates break-even sales and expected profit, including new monthly and per-sale expenses listed by the Strategist.
-4. The Risk Reviewer checks the financial results, constraints, and declared paid actions without estimates.
+4. The Risk Reviewer checks the financial results and declared paid actions without estimates, and lists constraints as warnings for manual review.
 5. The graph ends on approval or revises the proposal until the revision limit is reached.
 
-The optional `max_price` input sets a price cap. A proposal above it is rejected; equality is allowed. When the cap is `None`, no cap check applies. Nonblank free-text constraints require manual verification and prevent automatic approval.
+The optional `max_price` input sets a price cap. A proposal above it is rejected; equality is allowed. When the cap is `None`, no cap check applies. Nonblank free-text constraints cannot be checked automatically. The Risk Reviewer returns them in `warnings` for a person to verify; they do not block approval or trigger a revision.
 
 The Strategist lists incremental expenses in `added_costs` and expenses needing an estimate in `unpriced_paid_actions`. Existing costs must not be listed again. A proposal with an unpriced paid action cannot be automatically approved.
 
@@ -24,7 +24,7 @@ The Strategist lists incremental expenses in `added_costs` and expenses needing 
 | --- | --- | --- |
 | Launch Strategist | Create and revise a realistic launch proposal using previous reviewer feedback. | OpenAI through `ChatOpenAI`, with the Pydantic `LaunchStrategyOutput` schema. |
 | Financial Analyst | Calculate break-even and profit using base costs plus itemized incremental expenses. | `calculate_break_even_tool`, `calculate_profit_tool`. |
-| Risk Reviewer | Validate financial values, profit, break-even coverage, price limits, constraints, and declared unpriced paid actions. | `check_financial_risks`, `check_manual_constraints`. |
+| Risk Reviewer | Validate financial values, profit, break-even coverage, price limits, and declared unpriced paid actions; list constraints as warnings for manual review. | `check_financial_risks`, `check_manual_constraints`. |
 
 The Financial Analyst and Risk Reviewer have different, non-overlapping LangChain toolsets. Both invoke their tools explicitly and deterministically; neither uses an LLM.
 

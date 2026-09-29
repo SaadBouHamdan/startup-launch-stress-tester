@@ -18,9 +18,11 @@ def risk_reviewer(state: StartupState) -> dict:
         },
     })
 
-    risks.extend(check_manual_constraints.invoke({
+    # Free-text constraints cannot be verified automatically. Report them
+    # as warnings for a person to check; they do not block approval.
+    warnings = check_manual_constraints.invoke({
         "constraints": state.constraints,
-    }))
+    })
 
     for cost in state.added_costs:
         if cost.monthly_fixed > 0 and cost.per_sale > 0:
@@ -38,5 +40,6 @@ def risk_reviewer(state: StartupState) -> dict:
 
     return {
         "risks": risks,
+        "warnings": warnings,
         "approved": len(risks) == 0,
     }

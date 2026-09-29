@@ -67,6 +67,7 @@ def run_scenario(title: str, initial_state: StartupState) -> None:
             elif node == "risk_reviewer":
                 print("\n=== RISK REVIEWER ===")
                 print_list(values["risks"], "Risks")
+                print_list(values["warnings"], "Warnings (check manually)")
                 print(f"Approved: {values['approved']}")
 
             elif node == "revise":
@@ -85,6 +86,7 @@ def run_scenario(title: str, initial_state: StartupState) -> None:
     print(f"Final proposed price: {final_state['proposed_price']}")
     print(f"Final expected profit: {final_state['expected_profit']:.2f}")
     print_list(final_state["risks"], "Final risks")
+    print_list(final_state["warnings"], "Warnings (check manually)")
     sys.stdout.flush()
 
 
@@ -107,8 +109,8 @@ def main() -> None:
     )
     run_scenario("SCENARIO 1: MUGS - END AFTER FIRST REVIEW", mugs)
 
-    # A free-text constraint requires manual verification. It therefore
-    # triggers a revision, then ends when the revision limit is reached.
+    # A free-text constraint is reported as a warning for manual checking.
+    # It does not block approval, so this scenario may end after one review.
     shirts = StartupState(
         startup_idea="Custom university T-shirt business",
         selling_price=6,
@@ -119,7 +121,7 @@ def main() -> None:
         max_price=7,
         max_revisions=1,
     )
-    run_scenario("SCENARIO 2: SHIRTS - REVISION PATH", shirts)
+    run_scenario("SCENARIO 2: SHIRTS - WITH A CONSTRAINT", shirts)
 
 
 if __name__ == "__main__":

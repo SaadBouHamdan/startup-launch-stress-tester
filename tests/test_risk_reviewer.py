@@ -19,7 +19,7 @@ def test_risk_reviewer_allows_price_within_cap(max_price):
         max_price=max_price,
     )
 
-    assert risk_reviewer(state) == {"risks": [], "approved": True}
+    assert risk_reviewer(state) == {"risks": [], "warnings": [], "approved": True}
 
 
 def test_risk_reviewer_rejects_price_above_cap():
@@ -41,6 +41,7 @@ def test_risk_reviewer_rejects_price_above_cap():
             "Proposed price 8.0 exceeds max_price 7.0. "
             "Lower the proposed price to 7.0 or less."
         ],
+        "warnings": [],
         "approved": False,
     }
 
@@ -62,6 +63,7 @@ def test_risk_reviewer_reports_nonfinite_cap(max_price):
 
     assert risk_reviewer(state) == {
         "risks": ["max_price must be a valid finite number."],
+        "warnings": [],
         "approved": False,
     }
 
@@ -85,7 +87,7 @@ def test_risk_reviewer_approves_passing_plan():
 
     result = risk_reviewer(state)
 
-    assert result == {"risks": [], "approved": True}
+    assert result == {"risks": [], "warnings": [], "approved": True}
     assert state.model_dump() == original_state
 
 
@@ -112,7 +114,7 @@ def test_risk_reviewer_rejects_failing_financial_plan():
     assert state.model_dump() == original_state
 
 
-def test_risk_reviewer_requires_manual_constraint_verification():
+def test_risk_reviewer_lists_constraints_as_warnings_without_blocking():
     state = StartupState(
         startup_idea="Coffee stand",
         selling_price=6,
@@ -129,11 +131,11 @@ def test_risk_reviewer_requires_manual_constraint_verification():
 
     result = risk_reviewer(state)
 
-    assert result["approved"] is False
-    assert (
+    assert result["approved"] is True
+    assert result["risks"] == []
+    assert result["warnings"] == [
         "Constraint requires manual verification: Do not sell on campus"
-        in result["risks"]
-    )
+    ]
     assert state.model_dump() == original_state
 
 
@@ -160,6 +162,7 @@ def test_risk_reviewer_reports_missing_financial_values():
             "Missing required field: proposed_sales.",
             "Missing required field: proposed_price.",
         ],
+        "warnings": [],
         "approved": False,
     }
     assert state.model_dump() == original_state
@@ -181,5 +184,6 @@ def test_unpriced_paid_action_blocks_approval():
 
     assert risk_reviewer(state) == {
         "risks": ["Paid action needs a cost estimate: Paid ads"],
+        "warnings": [],
         "approved": False,
     }
