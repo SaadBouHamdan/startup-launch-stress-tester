@@ -70,7 +70,7 @@ def analyze(data: object) -> dict:
             "startup_idea", "target_customer", "launch_strategy", "proposed_price",
             "proposed_sales", "added_costs", "total_monthly_fixed_costs",
             "total_cost_per_sale", "break_even_sales", "expected_profit",
-            "risks", "approved", "revision_count", "unpriced_paid_actions",
+            "risks", "warnings", "approved", "revision_count", "unpriced_paid_actions",
         )
     }
 

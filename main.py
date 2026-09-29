@@ -120,6 +120,7 @@ def main() -> None:
     print(f"Break-even sales: {result['break_even_sales']}")
     print(f"Expected profit: {result['expected_profit']:.2f}")
     print(f"Risks: {result['risks']}")
+    print(f"Warnings (check manually): {result['warnings']}")
     print(f"Approved: {result['approved']}")
     print(f"Revision count: {result['revision_count']}")
 

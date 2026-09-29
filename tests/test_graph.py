@@ -76,6 +76,7 @@ def test_graph_revises_price_above_cap_and_approves():
     }
     assert updates[2]["risk_reviewer"] == {
         "risks": [cap_risk],
+        "warnings": [],
         "approved": False,
     }
     assert updates[3]["revise"] == {"revision_count": 1}
@@ -88,6 +89,7 @@ def test_graph_revises_price_above_cap_and_approves():
     }
     assert updates[6]["risk_reviewer"] == {
         "risks": [],
+        "warnings": [],
         "approved": True,
     }
     assert cap_risk in revision_prompt
@@ -291,3 +293,38 @@ def test_graph_revises_after_unpriced_expense_and_recalculates():
     assert updates[5]["financial_analyst"]["expected_profit"] == 40
     assert updates[5]["financial_analyst"]["break_even_sales"] == 74
     assert graph.get_state(config).values["approved"] is True
+
+def test_graph_approves_profitable_plan_with_constraint_on_first_attempt():
+    state = StartupState(
+        startup_idea="Custom university T-shirt business",
+        selling_price=6,
+        cost_per_sale=4,
+        monthly_fixed_costs=300,
+        expected_sales=80,
+        max_price=7,
+        constraints=["No paid ads"],
+    )
+    proposal = LaunchStrategyOutput(
+        target_customer="University students",
+        launch_strategy="Sell through campus clubs without paid ads.",
+        proposed_price=7,
+        proposed_sales=120,
+    )
+    config = {"configurable": {"thread_id": str(uuid4())}}
+
+    with patch("agents.strategist.ChatOpenAI") as mock_model:
+        structured_model = (
+            mock_model.return_value.with_structured_output.return_value
+        )
+        structured_model.invoke.return_value = proposal
+
+        result = graph.invoke(state.model_dump(), config)
+
+        assert structured_model.invoke.call_count == 1
+
+    assert result["approved"] is True
+    assert result["revision_count"] == 0
+    assert result["risks"] == []
+    assert result["warnings"] == [
+        "Constraint requires manual verification: No paid ads"
+    ]

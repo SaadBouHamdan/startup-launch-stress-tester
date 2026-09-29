@@ -31,6 +31,7 @@ class StartupState(BaseModel):
 
     # Risk reviewer outputs
     risks: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
     approved: bool = False
 
     # Graph control
